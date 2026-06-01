@@ -7,7 +7,7 @@ OrderEvent OrderEvent::parseOrderEvent(std::string& Event){
         Event.substr(0,2);
 
     order_event.orderNumber =
-        Event.substr(6,15);
+        std::stoull(Event.substr(6,15));
 
     order_event.buyAndSellIncidicator =
         Event.at(36);
@@ -15,17 +15,24 @@ OrderEvent OrderEvent::parseOrderEvent(std::string& Event){
     order_event.activityType =
         Event.at(37);
 
-    order_event.symbol =
-        Event.substr(38,10);
+
+    std::string symb =  Event.substr(38,10);
+    int i=0; 
+    while( symb.at(i) == 'b'){
+        i++;
+    }
+
+    order_event.symbol = symb.substr(i,symb.size());
 
     order_event.volumeDisclosed =
-        Event.substr(50,10);
+    std::stoul(Event.substr(50,10));
+     
 
     order_event.volumeOriginal =
-        Event.substr(60,10);
+    std::stoul(Event.substr(60,10));
 
     order_event.limitPrice =
-        Event.substr(70,8);
+       std::stoi(Event.substr(70,8));
 
     order_event.marketOrderFlag =
         Event.at(86);

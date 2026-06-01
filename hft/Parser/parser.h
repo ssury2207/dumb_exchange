@@ -3,13 +3,13 @@
 #include <string>
 struct OrderEvent{
     std::string recordType;
-    std::string orderNumber;
+    std::uint64_t orderNumber;
     char buyAndSellIncidicator;
     char activityType ;
     std::string symbol ;
-    std::string volumeDisclosed ;
-    std::string volumeOriginal ;
-    std::string limitPrice ;
+    std::uint32_t volumeDisclosed ;
+    std::uint32_t volumeOriginal ;
+    std::int32_t limitPrice ;
     char marketOrderFlag ;
 
    static OrderEvent parseOrderEvent(std::string& Event );
