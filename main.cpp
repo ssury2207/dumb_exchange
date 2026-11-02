@@ -8,7 +8,6 @@
 #include <iterator> 
 
 
-
 struct OrderRecord{
     std::int64_t order_id;
     int activity_type;
@@ -60,9 +59,9 @@ static void ADD_ORDER( OrderRecord order ){
      }
 }
 static void DELETE_ORDER(OrderRecord order ){
-//check if the order id is in the order book if yes cancel straight away
+
     if( orderIDLookUp.count( order.order_id ) ){
-    //get the side 
+
     char side = orderIDLookUp[order.order_id].side;
     long long price = orderIDLookUp[order.order_id].price;
     auto& position = orderIDLookUp[order.order_id].position;
@@ -98,7 +97,7 @@ static void DELETE_ORDER(OrderRecord order ){
             std::cout<<"The price level doesn't exists for REMOVAL";
         }
     }
-    //remove the stale lookup
+
     orderIDLookUp.erase(order.order_id);
     }
     else{
@@ -120,7 +119,10 @@ static void CANCEL_ORDER(OrderRecord order){
             if( buySide.count(price) ){
                 // 
                 position->quantity -= cancelQuanity;
-
+                // if quanity is 0 we can remove it from the book 
+                if(position->quantity == 0){
+                    DELETE_ORDER(order);
+                }
             }else{
                 std::cout<<"The price level doesn't exists for PARTIAL CANCELLATION";
             }
@@ -130,6 +132,10 @@ static void CANCEL_ORDER(OrderRecord order){
             if( sellSide.count(price) ){
                 auto& order_record = sellSide[price];
                 position->quantity -= cancelQuanity;
+                // if quanity is 0 we can remove it from the book 
+                if(position->quantity == 0){
+                    DELETE_ORDER(order);
+                }
             }else{
                 std::cout<<"The price level doesn't exists for PARTIAL CANCELLATION";
             }
@@ -156,10 +162,10 @@ int main(){
         ss >> order.order_id >> order.activity_type  >> order.side >> order.price >> order.quantity ;
         
         //add 
-        if(order.activity_type == 1){
+        if(order.activity_type == 'A' || order.activity_type == 'F'){
             ADD_ORDER(order);
         }
-        else if( order.activity_type == 3){
+        else if( order.activity_type == 'D'){
             DELETE_ORDER(order);
         }else if( order.activity_type ==  'X' ){
             CANCEL_ORDER(order);
