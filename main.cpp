@@ -10,10 +10,12 @@
 
 struct OrderRecord{
     std::int64_t order_id;
-    int activity_type;
+    char activity_type;
     char side;
     long long price; 
     long long quantity; 
+    std::int64_t new_order_id;
+
 };
 struct OrderRecordPosition{
     char side;
@@ -30,7 +32,7 @@ static void printOrderRecord(OrderRecord order){
 }
 
 static void ADD_ORDER( OrderRecord order ){
-    if( order.activity_type == 1 && order.side == 'B' ){
+        if( order.side == 'B' ){
         if( !buySide.count(order.price) ){
             std::list<OrderRecord> recordList;
             recordList.push_back(order);
@@ -43,7 +45,7 @@ static void ADD_ORDER( OrderRecord order ){
             order.price,
             std::prev(buySide[order.price].end())
         };
-    } else if(order.activity_type == 1 && order.side == 'S') {
+        } else if(order.side == 'S') {
          if( !sellSide.count(order.price) ){
             std::list<OrderRecord> recordList;
             recordList.push_back(order);
@@ -56,7 +58,8 @@ static void ADD_ORDER( OrderRecord order ){
             order.price,
             std::prev(sellSide[order.price].end())
         };
-     }
+        }
+
 }
 static void DELETE_ORDER(OrderRecord order ){
 
@@ -69,7 +72,6 @@ static void DELETE_ORDER(OrderRecord order ){
     if(side == 'B') {
         //remove from the buy side 
         if( buySide.count(price) ){
-
             auto& order_record = buySide[price];
             //remove
             order_record.erase(position);
@@ -80,6 +82,7 @@ static void DELETE_ORDER(OrderRecord order ){
 
         }else{
             std::cout<<"The price level doesn't exists for REMOVAL";
+            return;
         }
     }
     
@@ -95,9 +98,10 @@ static void DELETE_ORDER(OrderRecord order ){
             }
         }else{
             std::cout<<"The price level doesn't exists for REMOVAL";
+            return;
+
         }
     }
-
     orderIDLookUp.erase(order.order_id);
     }
     else{
@@ -117,7 +121,6 @@ static void CANCEL_ORDER(OrderRecord order){
         if(side == 'B') {
             //remove from the buy side 
             if( buySide.count(price) ){
-                // 
                 position->quantity -= cancelQuanity;
                 // if quanity is 0 we can remove it from the book 
                 if(position->quantity == 0){
@@ -126,7 +129,6 @@ static void CANCEL_ORDER(OrderRecord order){
             }else{
                 std::cout<<"The price level doesn't exists for PARTIAL CANCELLATION";
             }
-
         }
         else if(side == 'S'){
             if( sellSide.count(price) ){
@@ -147,40 +149,44 @@ static void CANCEL_ORDER(OrderRecord order){
 }
 
 int main(){
-
-    std::ifstream file("input_file.txt");
-    if (!file.is_open()) {
-        std::cerr << "Could not open file\n";
-        return 1;
-    }
     std::string line;
     int count = 0; 
-
-    while (std::getline(file, line)) {
+    while (std::getline(std::cin, line)) {
         std::istringstream ss(line);
+        // std::cout<<line<<'\n';
         OrderRecord order{};
-        ss >> order.order_id >> order.activity_type  >> order.side >> order.price >> order.quantity ;
-        
+        ss >> order.order_id >> order.activity_type  >> order.side >> order.price >> order.quantity >> order.new_order_id;
         //add 
         if(order.activity_type == 'A' || order.activity_type == 'F'){
             ADD_ORDER(order);
         }
         else if( order.activity_type == 'D'){
             DELETE_ORDER(order);
-        }else if( order.activity_type ==  'X' ){
+        }
+        else if( order.activity_type ==  'X' ){
             CANCEL_ORDER(order);
-        }else if ( order.activity_type == 'U'){
-            long long newPrice = order.price;
-            long long newQuanity = order.quantity; 
-            long long newOrderID = order.order_id;
-            long long originalOrderID = order.order_id;
+        }
+        else if ( order.activity_type == 'U'){
+            
+            OrderRecord modified_order{};
+            if( orderIDLookUp.count(order.order_id) ){
+                char modification_side =   orderIDLookUp[order.order_id].side;
+                modified_order.activity_type = order.activity_type;
+                modified_order.side = modification_side;
+                modified_order.price = order.price;
+                modified_order.quantity = order.quantity;
+                modified_order.order_id = order.new_order_id;
 
-            //first Delete the orderID from the queue ;
-            DELETE_ORDER(order);
-            //ADD NEW ORDER TO THE QUEUE
-            ADD_ORDER(order);
+                DELETE_ORDER(order);
+                ADD_ORDER(modified_order);
+
+            }else{
+                std::cout<<"Cannot modify this order order id was not found"<<'\n';
+            }
+           
         }
         count++;
     }
+    std::cout<<"Processed "<< count <<" Orders";
     return 0; 
 }
